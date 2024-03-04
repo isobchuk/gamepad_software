@@ -1,0 +1,20 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "gdb",
+            "request": "attach",
+            "name": "Debug gdb",
+            "executable": "build/debug/retro_gamepad.elf",
+            "target": "127.0.0.1:2331",
+            "remote": true,
+            "cwd": "${workspaceRoot}",
+            "gdbpath": "arm-none-eabi-gdb",
+            "autorun": [
+                "file build/debug/retro_gamepad.elf",
+                "load",
+                "monitor reset halt"
+            ]
+        }
+    ]
+}

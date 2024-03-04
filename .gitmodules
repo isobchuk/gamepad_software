@@ -1,0 +1,9 @@
+[submodule "components/cpp_register"]
+	path = components/cpp_register
+	url = git@github.com:isobchuk/cpp_register.git
+[submodule "components/const_value"]
+	path = components/const_value
+	url = git@github.com:isobchuk/const_value.git
+[submodule "components/parameters_pack"]
+	path = components/parameters_pack
+	url = git@github.com:isobchuk/parameters_pack.git
