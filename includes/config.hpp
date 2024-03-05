@@ -46,4 +46,7 @@ inline constexpr gpio::PinOut<PinFunction> sc_Pin[] = {
 
 static_assert((static_cast<std::underlying_type_t<PinFunction>>(PinFunction::Num) == (sizeof(sc_Pin) / sizeof(sc_Pin[0]))),
               "Ensure that all pins were configured!");
+
+inline constexpr auto sc_QuartzClock = 8'000'000UL;
+inline constexpr auto sc_SystemClock = 48'000'000UL;
 } // namespace gamepad

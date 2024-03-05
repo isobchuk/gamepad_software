@@ -7,6 +7,8 @@
 #include "hal_interrupts.hpp"
 #include "meta_types.hpp"
 
+#include "hal_clock.hpp"
+
 using namespace cpp_register;
 using namespace cpp_register::constants;
 using namespace stm32f0x0::stk;
@@ -15,16 +17,17 @@ using namespace stm32f0x0::rcc;
 
 using namespace iso::meta_type;
 
+static constexpr stm32f0x0::hal::clock::SystemClock<stm32f0x0::hal::clock::HSE<gamepad::sc_QuartzClock>, gamepad::sc_SystemClock> clock{};
+
 int main() {
 
-  static constexpr gamepad::gpio::GpioController<gamepad::sc_Pin> gpio;
+  RCC->AHBENR |= RCC_AHBENR::IOPAEN | RCC_AHBENR::IOPBEN;
 
+  static constexpr gamepad::gpio::GpioController<gamepad::sc_Pin> gpio;
   gpio.Init();
 
   static constexpr auto SYSTEM_MHZ = 8UL;
   static constexpr auto SYST_PERIOD = reg_v<(SYSTEM_MHZ * 1000000UL) / 2 - 1>;
-
-  RCC->AHBENR |= RCC_AHBENR::IOPAEN | RCC_AHBENR::IOPBEN;
 
   STK->RVR = STK_RVR::RELOAD(SYST_PERIOD);
   STK->CVR = STK_CVR::CURRENT(SYST_PERIOD);
