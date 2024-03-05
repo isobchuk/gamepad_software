@@ -7,3 +7,6 @@
 [submodule "components/parameters_pack"]
 	path = components/parameters_pack
 	url = git@github.com:isobchuk/parameters_pack.git
+[submodule "components/meta_types"]
+	path = components/meta_types
+	url = git@github.com:isobchuk/meta_types.git
