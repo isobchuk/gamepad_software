@@ -11,9 +11,10 @@
             "cwd": "${workspaceRoot}",
             "gdbpath": "arm-none-eabi-gdb",
             "autorun": [
+                "monitor reset halt",
                 "file build/debug/retro_gamepad.elf",
                 "load",
-                "monitor reset halt"
+                "monitor reset"
             ]
         }
     ]

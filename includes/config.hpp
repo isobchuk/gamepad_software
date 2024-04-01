@@ -1,11 +1,11 @@
 #pragma once
 
-#include "hal_gpio.hpp"
+#include "mcu_gpio.hpp"
 
 namespace gamepad {
 
 namespace mcu = stm32f0x0;
-namespace gpio = mcu::hal::gpio;
+namespace gpio = mcu::gpio;
 
 enum class PinFunction : unsigned {
   JoystickAxisX,
@@ -49,4 +49,5 @@ static_assert((static_cast<std::underlying_type_t<PinFunction>>(PinFunction::Num
 
 inline constexpr auto sc_QuartzClock = 8'000'000UL;
 inline constexpr auto sc_SystemClock = 48'000'000UL;
+
 } // namespace gamepad

@@ -1,47 +1,34 @@
-#include "reg_gpio.hpp"
-#include "reg_rcc.hpp"
-#include "reg_stk.hpp"
-
 #include "config.hpp"
-#include "hal_gpio.hpp"
-#include "hal_interrupts.hpp"
+
+#include "mcu_clock.hpp"
+#include "mcu_gpio.hpp"
+#include "mcu_interrupts.hpp"
+#include "mcu_systick.hpp"
+
 #include "meta_types.hpp"
 
-#include "hal_clock.hpp"
+static constexpr gamepad::mcu::clock::SystemClock<gamepad::mcu::clock::HSE<gamepad::sc_QuartzClock>, gamepad::sc_SystemClock> clock{};
+static constexpr gamepad::gpio::GpioController<gamepad::sc_Pin> gpio;
+static constexpr gamepad::mcu::interrupt::InterruptController interrupt;
+static constexpr gamepad::mcu::system_timer::SystemTimer<(gamepad::sc_SystemClock / 1000) - 1, true> systemTimer;
 
-using namespace cpp_register;
-using namespace cpp_register::constants;
-using namespace stm32f0x0::stk;
-using namespace stm32f0x0::gpio;
-using namespace stm32f0x0::rcc;
-
-using namespace iso::meta_type;
-
-static constexpr stm32f0x0::hal::clock::SystemClock<stm32f0x0::hal::clock::HSE<gamepad::sc_QuartzClock>, gamepad::sc_SystemClock> clock{};
+static volatile uint32_t time;
 
 int main() {
+  interrupt.GlobalEnable();
   clock.Init();
-  RCC->AHBENR |= RCC_AHBENR::IOPAEN | RCC_AHBENR::IOPBEN;
-
-  static constexpr gamepad::gpio::GpioController<gamepad::sc_Pin> gpio;
   gpio.Init();
+  systemTimer.Init();
 
-  static constexpr auto SYST_PERIOD = reg_v<(gamepad::sc_SystemClock / 1000) - 1>;
-
-  STK->RVR = STK_RVR::RELOAD(SYST_PERIOD);
-  STK->CVR = STK_CVR::CURRENT(SYST_PERIOD);
-  STK->CSR |= (STK_CSR::CLKSOURCE | STK_CSR::ENABLE);
-
-  uint32_t time = 0;
   while (true) {
-    if (STK->CSR & STK_CSR::COUNTFLAG) {
-      time++;
-    }
-    if (1000 == time) {
-      time = 0;
-      gpio[const_v<gamepad::PinFunction::Led>].Change();
-    }
   }
 
   return 0;
+}
+
+void SysTick_Handler(void) {
+  time = time + 1;
+  if (!(time % 1000)) {
+    gpio[iso::meta_type::const_v<gamepad::PinFunction::Led>].Change();
+  }
 }

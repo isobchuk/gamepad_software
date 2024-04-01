@@ -1,9 +1,9 @@
 #pragma once
 
+#include "hal_interrupt.hpp"
 #include "reg_nvic.hpp"
-#include <concepts>
 
-namespace stm32f0x0::hal::interrupt {
+namespace stm32f0x0::interrupt {
 
 using InterruptT = uint32_t;
 
@@ -37,12 +37,13 @@ enum class Number : InterruptT {
   USART3_4_5_6 = 29,        // USART3, USART4, USART5, USART6 global  interrupt
   USB = 31,                 // USB global interrupt
 };
-/*
+
 template <const Number interruptNumber> class Interrupt final {
   static constexpr auto scm_RegValue = cpp_register::reg_v<1UL, static_cast<InterruptT>(interruptNumber)>;
 
 public:
-  consteval Interrupt() = default;
+  struct InterruptType;
+  consteval Interrupt() { static_assert(::hal::interrupt::interrupt<Interrupt>, "The class interrupt should implement a whole concept interface!"); }
 
   inline void Enable() const {
     using namespace stm32f0x0::nvic;
@@ -81,46 +82,51 @@ class InterruptController final {
   InterruptController(InterruptController &&) = delete;
   InterruptController &operator=(InterruptController &&) = delete;
 
-  template <iso::const_value First>
+  template <iso::meta_type::const_value First>
   requires std::same_as<Number, typename First::type>
   [[nodiscard("The value have to be written to the register!")]] static inline consteval InterruptT Extract(const First) {
     return static_cast<InterruptT>(1UL << static_cast<InterruptT>(First::value));
   }
 
-  template <iso::const_value First, iso::const_value... Rest>
+  template <iso::meta_type::const_value First, iso::meta_type::const_value... Rest>
   requires std::same_as<Number, typename First::type>
   [[nodiscard("The value have to be written to the register!")]] static inline consteval InterruptT Extract(const First, const Rest...) {
     return static_cast<InterruptT>(1UL << static_cast<InterruptT>(First::value)) | Extract(Rest{}...);
   }
 
-public:
-  consteval InterruptController() = default;
+  using InterruptNumber = Number;
 
-  template <iso::const_value InterruptNumber>
+public:
+  consteval InterruptController() {
+    static_assert(::hal::interrupt::interrupt_controller<InterruptController>,
+                  "The class interrupt controller should implement a whole concept interface!");
+  }
+
+  template <iso::meta_type::const_value InterruptNumber>
   requires std::same_as<Number, typename InterruptNumber::type>
   inline consteval Interrupt<InterruptNumber::value> operator[](const InterruptNumber) const {
     return Interrupt<InterruptNumber::value>{};
   }
 
-  template <iso::const_value First, iso::const_value... Rest> inline void Enable(const First, const Rest...) const {
+  template <iso::meta_type::const_value First, iso::meta_type::const_value... Rest> inline void Enable(const First, const Rest...) const {
     using namespace stm32f0x0::nvic;
     constexpr auto value = Extract(First{}, Rest{}...);
     NVIC->ISER |= NVIC_ISER::SETENA(cpp_register::reg_v<value>);
   }
 
-  template <iso::const_value First, iso::const_value... Rest> inline void Disable(const First, const Rest...) const {
+  template <iso::meta_type::const_value First, iso::meta_type::const_value... Rest> inline void Disable(const First, const Rest...) const {
     using namespace stm32f0x0::nvic;
     constexpr auto value = Extract(First{}, Rest{}...);
     NVIC->ICER |= NVIC_ICER::CLRENA(cpp_register::reg_v<value>);
   }
 
-  template <iso::const_value First, iso::const_value... Rest> inline void PendingSet(const First, const Rest...) const {
+  template <iso::meta_type::const_value First, iso::meta_type::const_value... Rest> inline void PendingSet(const First, const Rest...) const {
     using namespace stm32f0x0::nvic;
     constexpr auto value = Extract(First{}, Rest{}...);
     NVIC->ISPR |= NVIC_ISPR::SETPEND(cpp_register::reg_v<value>);
   }
 
-  template <iso::const_value First, iso::const_value... Rest> inline void PendingClear(const First, const Rest...) const {
+  template <iso::meta_type::const_value First, iso::meta_type::const_value... Rest> inline void PendingClear(const First, const Rest...) const {
     using namespace stm32f0x0::nvic;
     constexpr auto value = Extract(First{}, Rest{}...);
     NVIC->ICPR |= NVIC_ICPR::CLRPEND(cpp_register::reg_v<value>);
@@ -129,6 +135,5 @@ public:
   inline void GlobalEnable() const { asm volatile("cpsie i"); }
   inline void GlobalDisable() const { asm volatile("cpsid i"); }
 };
-*/
 
-}; // namespace stm32f0x0::hal::interrupt
+}; // namespace stm32f0x0::interrupt

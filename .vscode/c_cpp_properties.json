@@ -5,8 +5,9 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/components/**",
-                "C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/13.2 Rel1/arm-none-eabi/include"
-                //"C:/GNU_Project/gcc-10.2-arm32-eabi/arm-none-eabi/include/**"
+                "C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/13.2 Rel1/arm-none-eabi/include",
+                "${workspaceFolder}/components/hal/stm32f070f6/registers/**",
+                "${workspaceFolder}/components/cpp_register"
             ],
             "defines": [
                 "_DEBUG",

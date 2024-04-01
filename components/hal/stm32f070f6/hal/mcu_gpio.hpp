@@ -1,10 +1,12 @@
 #pragma once
 
+#include "hal_gpio.hpp"
 #include "meta_types.hpp"
 #include "reg_gpio.hpp"
+#include "reg_rcc.hpp"
 #include <concepts>
 
-namespace stm32f0x0::hal::gpio {
+namespace stm32f0x0::gpio {
 
 enum class Port { PA, PB };
 enum class Pin { Pin_0, Pin_1, Pin_2, Pin_3, Pin_4, Pin_5, Pin_6, Pin_7, Pin_8, Pin_9, Pin_10, Pin_11, Pin_12, Pin_13, Pin_14, Pin_15 };
@@ -49,7 +51,17 @@ template <const Port port, const Pin pin, const Mode mode> class Gpio final {
   static constexpr auto MODE = mode;
 
 public:
-  consteval Gpio() = default;
+  struct PinType;
+
+  consteval Gpio() {
+    if constexpr (Mode::Output == MODE) {
+      static_assert(::hal::gpio::gpio_out<Gpio>, "The class gpio output should implement a whole concept interface!");
+    }
+    if constexpr (Mode::Input == MODE) {
+      static_assert(::hal::gpio::gpio_in<Gpio>, "The class gpio input should implement a whole concept interface!");
+    }
+    static_assert(::hal::gpio::is_gpio<Gpio>, "The class gpio should implement a whole concept interface!");
+  }
 
   template <iso::meta_type::const_value State>
   inline void Write(const State) const
@@ -63,7 +75,7 @@ public:
     }
   }
 
-  inline bool Read() const
+  [[nodiscard("If you ask - you should store the status")]] inline bool Read() const
   requires(Mode::Input == MODE)
   {
     using namespace stm32f0x0::gpio;
@@ -198,12 +210,28 @@ template <const auto &table> class GpioController final {
     }
   }
 
+  static consteval uint32_t IsPortInside(const Port port) {
+    uint32_t isIn = 0UL;
+    for (const auto &el : cm_GpioTable) {
+      if (port == el.cm_Port) {
+        isIn = 1UL;
+        break;
+      }
+    }
+    return isIn;
+  }
+
 public:
-  consteval GpioController() = default;
+  consteval GpioController() {
+    static_assert(::hal::gpio::gpio_controller<GpioController>, "The class gpio controller should implement a whole concept interface!");
+  }
 
   void Init() const {
     using namespace stm32f0x0::gpio;
+    using namespace stm32f0x0::rcc;
     using namespace cpp_register;
+
+    RCC->AHBENR |= RCC_AHBENR::IOPAEN(reg_v<IsPortInside(Port::PA)>) | RCC_AHBENR::IOPBEN(reg_v<IsPortInside(Port::PB)>);
 
     constexpr auto modeA = GetMode<Port::PA>();
     constexpr auto modeB = GetMode<Port::PB>();
@@ -279,4 +307,4 @@ public:
   }
 };
 
-} // namespace stm32f0x0::hal::gpio
+} // namespace stm32f0x0::gpio

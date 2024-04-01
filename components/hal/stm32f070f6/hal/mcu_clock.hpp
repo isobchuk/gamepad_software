@@ -1,21 +1,13 @@
 #pragma once
 
+#include "hal_clock.hpp"
 #include "meta_types.hpp"
 #include "reg_flash.hpp"
 #include "reg_rcc.hpp"
 
-#include <concepts>
+namespace hal::gpio {}
 
-template <typename SystemFrequencyT>
-concept hal_system_frequency = std::unsigned_integral<SystemFrequencyT> && (sizeof(SystemFrequencyT) >= sizeof(unsigned long));
-
-template <typename SystemClockT>
-concept hal_system_clock = requires(SystemClockT cl) {
-  cl.Init();
-  { cl.Frequency() } -> hal_system_frequency;
-};
-
-namespace stm32f0x0::hal::clock {
+namespace stm32f0x0::clock {
 
 enum class SourceClockType : uint32_t { HSI = 0b00, HSE = 0b10, MASK = 0b11 };
 
@@ -52,7 +44,7 @@ class SystemClock final {
   static constexpr auto scSourceType = SourceClock::sc_SourceClockType;
 
 public:
-  inline consteval SystemClock() { static_assert(hal_system_clock<SystemClock>, "The class should implement a whole concept interface!"); }
+  inline consteval SystemClock() { static_assert(::hal::clock::system_clock<SystemClock>, "The class should implement a whole concept interface!"); }
 
   inline void Init(void) const {
     using namespace stm32f0x0::rcc;
@@ -108,4 +100,4 @@ public:
   [[nodiscard]] inline consteval unsigned long Frequency(void) const { return scSystemFrequency; }
 };
 
-} // namespace stm32f0x0::hal::clock
+} // namespace stm32f0x0::clock
