@@ -3,8 +3,10 @@
 #include "hal_systick.hpp"
 #include "reg_stk.hpp"
 
-
 namespace stm32f0x0::system_timer {
+
+template <typename TimeSinceLaunchT>
+concept time_since_launch = requires(TimeSinceLaunchT time) { time++; };
 
 template <const uint32_t reloadPeriod, const bool interrupt = false> class SystemTimer final {
   static constexpr auto mReloadPeriod = cpp_register::reg_v<reloadPeriod>;

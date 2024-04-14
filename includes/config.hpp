@@ -1,6 +1,12 @@
 #pragma once
 
+#include "mcu_clock.hpp"
 #include "mcu_gpio.hpp"
+#include "mcu_interrupts.hpp"
+#include "mcu_systick.hpp"
+
+#include "led.hpp"
+#include "meta_types.hpp"
 
 namespace gamepad {
 
@@ -49,5 +55,30 @@ static_assert((static_cast<std::underlying_type_t<PinFunction>>(PinFunction::Num
 
 inline constexpr auto sc_QuartzClock = 8'000'000UL;
 inline constexpr auto sc_SystemClock = 48'000'000UL;
+
+class TimeSinceLaunch {
+  uint16_t ms;
+  uint32_t s;
+
+public:
+  TimeSinceLaunch() : ms(), s() {}
+
+  inline void operator++() {
+    ms++;
+    if (1000U == ms) {
+      s++;
+      ms = 0;
+    }
+  }
+};
+
+struct processor {
+  static constexpr mcu::clock::SystemClock<gamepad::mcu::clock::HSE<gamepad::sc_QuartzClock>, gamepad::sc_SystemClock> clock{};
+  static constexpr gpio::GpioController<gamepad::sc_Pin> gpio{};
+  static constexpr mcu::interrupt::InterruptController interrupt{};
+  static constexpr mcu::system_timer::SystemTimer<(gamepad::sc_SystemClock / 1000) - 1, true> systemTimer{};
+};
+
+static constexpr hardware::led::Led led(processor::gpio[iso::meta_type::const_v<gamepad::PinFunction::Led>]);
 
 } // namespace gamepad
