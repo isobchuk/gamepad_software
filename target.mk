@@ -50,7 +50,7 @@ APP_SOURCES_FOLDER	= sources
 APP_SUB_FOLDERS		=
 
 # Add your components folders here
-COMPONENTS 	:= cpp_register hal hal\stm32f070f6\registers hal\stm32f070f6\hal meta_types system_time led
+COMPONENTS 	:= cpp_register hal hal\stm32f070f6\registers hal\stm32f070f6\hal meta_types led
 # Add third party folders here
 THIRD_PARTY :=
 # Add additional includes folder here

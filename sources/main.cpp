@@ -1,9 +1,5 @@
 #include "config.hpp"
 
-static volatile uint32_t time;
-
-// static constexpr system_time::SystemTime systemTime(time);
-
 using namespace gamepad;
 
 int main() {
@@ -12,15 +8,14 @@ int main() {
   processor::gpio.Init();
   processor::systemTimer.Init();
 
+  Timeout timeoutLed;
+
   while (true) {
+    time.Start(timeoutLed);
+    if (time.Check(timeoutLed, 250U)) {
+      led.Change();
+    }
   }
 
   return 0;
-}
-
-void SysTick_Handler(void) {
-  time = time + 1;
-  if (!(time % 1000)) {
-    led.Change();
-  }
 }
