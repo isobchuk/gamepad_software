@@ -37,6 +37,7 @@ void SPI2_IRQHandler();
 void USART1_IRQHandler();
 void USART2_IRQHandler();
 void CEC_IRQHandler();
+void USB_IRQHandler();
 void BootRAM();
 
 extern "C" void DefaultHandler();
@@ -74,6 +75,7 @@ extern "C" void DefaultHandler();
 #pragma weak USART1_IRQHandler = DefaultHandler
 #pragma weak USART2_IRQHandler = DefaultHandler
 #pragma weak CEC_IRQHandler = DefaultHandler
+#pragma weak USB_IRQHandler = DefaultHandler
 #pragma weak BootRAM = DefaultHandler
 
 [[gnu::used, gnu::section(".isr_vector")]] static constinit void (*const p_sc_InterruptVectorTable[])(void) = {
@@ -124,7 +126,7 @@ extern "C" void DefaultHandler();
     USART2_IRQHandler,
     nullptr,
     CEC_IRQHandler,
-    nullptr,
+    USB_IRQHandler,
     BootRAM};
 
 void Reset_Handler() {

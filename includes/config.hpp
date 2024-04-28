@@ -4,6 +4,7 @@
 #include "mcu_gpio.hpp"
 #include "mcu_interrupts.hpp"
 #include "mcu_systick.hpp"
+#include "mcu_usb.hpp"
 
 #include "led.hpp"
 #include "meta_types.hpp"
@@ -63,6 +64,7 @@ struct processor {
   static constexpr gpio::GpioController<gamepad::sc_Pin> gpio{};
   static constexpr mcu::interrupt::InterruptController interrupt{};
   static constexpr mcu::system_timer::SystemTimer<gamepad::sc_SystemClock, mcu::system_timer::Unit::mS, SystemTick> systemTimer{};
+  static constexpr mcu::usb::Usb usb{};
 };
 
 static constexpr hardware::led::Led led(processor::gpio[iso::meta_type::const_v<gamepad::PinFunction::Led>]);

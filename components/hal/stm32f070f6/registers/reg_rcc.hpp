@@ -141,7 +141,7 @@ struct RCC_APB1ENR {
   static constexpr cpp_register::Field<decltype(RCC->APB1ENR), (1UL << 20), cpp_register::AccessMode::RW, 1> USART5EN{};
   static constexpr cpp_register::Field<decltype(RCC->APB1ENR), (1UL << 21), cpp_register::AccessMode::RW, 1> I2C1EN{};
   static constexpr cpp_register::Field<decltype(RCC->APB1ENR), (1UL << 22), cpp_register::AccessMode::RW, 1> I2C2EN{};
-  static constexpr cpp_register::Field<decltype(RCC->APB1ENR), (1UL << 23), cpp_register::AccessMode::RW, 1> USBRST{};
+  static constexpr cpp_register::Field<decltype(RCC->APB1ENR), (1UL << 23), cpp_register::AccessMode::RW, 1> USBEN{};
   static constexpr cpp_register::Field<decltype(RCC->APB1ENR), (1UL << 28), cpp_register::AccessMode::RW, 1> PWREN{};
 };
 
