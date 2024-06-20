@@ -1,9 +1,19 @@
 #include "config.hpp"
+
+#include "device.hpp"
+#include "fifo.hpp"
+#include <utility>
+
 #include "request.hpp"
 
 using namespace gamepad;
 
+using namespace iso::usb;
+
 int main() {
+
+  static constexpr UsbDevice usb(descriptor::EDeviceClass::HumanInterfaceDevice, descriptor::EBcdUsb::Usb2_0, 0x5555U, 0x6789U);
+
   processor::interrupt.GlobalEnable();
   processor::clock.Init();
   processor::gpio.Init();
@@ -15,13 +25,17 @@ int main() {
   Timeout timeoutLed;
 
   while (true) {
+    constexpr iso::usb::request::CStandardRequest request{};
+
+    if (processor::usb.Read()) {
+      request.Request(processor::usb.Read().aBuffer);
+      processor::usb.Read().sLength = 0;
+    }
+
     time.Start(timeoutLed);
     if (time.Check(timeoutLed, 250U)) {
       led.Change();
     }
   }
-  // using namespace iso::usb::request;
-  // static constexpr char buffer[8] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
-  // static constexpr StandardRequest request(buffer);
   return 0;
 }
