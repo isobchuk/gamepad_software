@@ -4,23 +4,14 @@
 
 namespace iso::usb {
 
-enum class EConnection { Device, Host, OTG };
+template <const EConnection conn, typename TIntegration> class CUsb {
 
-template <const EConnection conn> class CUsb {
-  static constexpr auto _Connection = conn;
-  const descriptor::EDeviceClass _DeviceClass;
-  const descriptor::EBcdUsb _ProtocolVersion;
-  const Type::Word _Vid;
-  const Type::Word _Pid;
-
-  const descriptor::UDeviceDescriptor _DeviceDescriptor;
+  const TIntegration &_Integration;
 
 public:
-  consteval CUsb(const descriptor::EDeviceClass device, const descriptor::EBcdUsb version, const Type::Word vid, const Type::Word pid)
-  requires false
-      : _DeviceClass(device), _ProtocolVersion(version), _Vid(vid), _Pid(pid), _DeviceDescriptor(version, device, vid, pid) {}
+  consteval CUsb(const TIntegration &integ) : _Integration(integ) {}
 };
 
-template <const EConnection conn> using Usb = CUsb<conn>;
+template <const EConnection conn, typename TIntegration> using Usb = CUsb<conn, TIntegration>;
 
 } // namespace iso::usb

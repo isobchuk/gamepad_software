@@ -1,7 +1,7 @@
 /* nrf5340 */
 OUTPUT_FORMAT("elf32-littlearm", "elf32-littlearm", "elf32-littlearm")
 
-STACK_SIZE = 0x2000;
+STACK_SIZE = 2024;
 
 MEMORY
 {

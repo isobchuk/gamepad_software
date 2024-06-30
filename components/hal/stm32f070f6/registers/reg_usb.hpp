@@ -5,7 +5,7 @@
 namespace stm32f0x0::usb {
 
 template <const cpp_register::RegisterAddress address> struct USB_T {
-  static constexpr cpp_register::Register<address + 0x0, cpp_register::AccessMode::RW, uint16_t, struct EPR, 8, 4> EPR{};
+  static constexpr cpp_register::Register<address + 0x0, cpp_register::AccessMode::RW, uint32_t, struct EPR, 8, 4> EPR{};
   static constexpr cpp_register::Register<address + 0x40, cpp_register::AccessMode::RW, uint16_t, struct CNTR> CNTR{};
   static constexpr cpp_register::Register<address + 0x44, cpp_register::AccessMode::RW, uint16_t, struct ISTR> ISTR{};
   static constexpr cpp_register::Register<address + 0x48, cpp_register::AccessMode::R, uint16_t, struct FNR> FNR{};
@@ -19,14 +19,14 @@ inline constexpr USB_T<0x40005C00> const *USB{};
 
 struct USB_EPR {
   static constexpr cpp_register::Field<decltype(USB->EPR), (1UL << 0), cpp_register::AccessMode::RW, 4> EA{};
-  static constexpr cpp_register::Field<decltype(USB->EPR), (1UL << 4), cpp_register::AccessMode::T, 2> STAT_TX{};
-  static constexpr cpp_register::Field<decltype(USB->EPR), (1UL << 6), cpp_register::AccessMode::T, 1> DTOG_TX{};
+  static constexpr cpp_register::Field<decltype(USB->EPR), (1UL << 4), cpp_register::AccessMode::RW, 2> STAT_TX{};
+  static constexpr cpp_register::Field<decltype(USB->EPR), (1UL << 6), cpp_register::AccessMode::RW, 1> DTOG_TX{};
   static constexpr cpp_register::Field<decltype(USB->EPR), (1UL << 7), cpp_register::AccessMode::RC_W0, 1> CTR_TX{};
   static constexpr cpp_register::Field<decltype(USB->EPR), (1UL << 8), cpp_register::AccessMode::RW, 1> EP_KIND{};
   static constexpr cpp_register::Field<decltype(USB->EPR), (1UL << 9), cpp_register::AccessMode::RW, 2> EP_TYPE{};
   static constexpr cpp_register::Field<decltype(USB->EPR), (1UL << 11), cpp_register::AccessMode::R, 1> SETUP{};
-  static constexpr cpp_register::Field<decltype(USB->EPR), (1UL << 12), cpp_register::AccessMode::T, 2> STAT_RX{};
-  static constexpr cpp_register::Field<decltype(USB->EPR), (1UL << 14), cpp_register::AccessMode::T, 1> DTOG_RX{};
+  static constexpr cpp_register::Field<decltype(USB->EPR), (1UL << 12), cpp_register::AccessMode::RW, 2> STAT_RX{};
+  static constexpr cpp_register::Field<decltype(USB->EPR), (1UL << 14), cpp_register::AccessMode::RW, 1> DTOG_RX{};
   static constexpr cpp_register::Field<decltype(USB->EPR), (1UL << 15), cpp_register::AccessMode::RC_W0, 1> CTR_RX{};
 };
 

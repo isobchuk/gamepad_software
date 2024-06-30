@@ -5,8 +5,6 @@
 #include "reg_flash.hpp"
 #include "reg_rcc.hpp"
 
-namespace hal::gpio {}
-
 namespace stm32f0x0::clock {
 
 enum class SourceClockType : uint32_t { HSI = 0b00, HSE = 0b10, MASK = 0b11 };

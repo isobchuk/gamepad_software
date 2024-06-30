@@ -2,156 +2,203 @@
 
 #include "type.hpp"
 #include <bit>
+#include <descriptor.hpp>
 #include <endpoint.hpp>
 
+static unsigned noHandler;
+
 namespace iso::usb::request {
+enum class ERequest : Type::Byte {
+  GET_STATUS,
+  CLEAR_FEATURE,
+  SET_FEATURE = 0x03U,
+  SetAddress = 0x05U,
+  GetDescriptor,
+  SET_DESCRIPTOR,
+  GET_CONFIGURATION,
+  SetConfiguration,
+  GetInterface,
+  SET_INTERFACE,
+  SYNCH_FRAME,
+  SET_LINE_CODING = 0x20U,
+  GET_LINE_CODING,
+  SET_CONTROL_LINE_STATE,
+  GET_MAX_LUN = 0xFEU,
+  BULK_ONLY_MSD_RESET,
+};
 
-class CStandardRequest {
-  static constexpr unsigned _STANDARD_REQUEST_SIZE = 8U;
+static constexpr unsigned _STANDARD_REQUEST_SIZE = 8U;
 
-  union UStandardRequest {
+struct SRequest {
+  struct SBmRequestType {
+    enum class ERecipient : Type::BitMap<Type::Byte> { Device, Interface, Endpoint, Other };
+    enum class EType : Type::BitMap<Type::Byte> { Standard, Class, Vendor, Reserved };
+    enum class EDataTransferDirection : Type::BitMap<Type::Byte> { Host2Device, Device2Host };
 
-    enum class ERequest : Type::Byte {
-      GET_STATUS,
-      CLEAR_FEATURE,
-      SET_FEATURE = 0x03U,
-      SET_ADDRESS = 0x05U,
-      GET_DESCRIPTOR,
-      SET_DESCRIPTOR,
-      GET_CONFIGURATION,
-      SET_CONFIGURATION,
-      GET_INTERFACE,
-      SET_INTERFACE,
-      SYNCH_FRAME,
-      SET_LINE_CODING = 0x20U,
-      GET_LINE_CODING,
-      SET_CONTROL_LINE_STATE,
-      GET_MAX_LUN = 0xFEU,
-      BULK_ONLY_MSD_RESET,
+    struct SBitMap {
+      ERecipient bmRecipient : 5;
+      EType bmType : 2;
+      EDataTransferDirection bmDataTransferDirection : 1;
+
+      inline constexpr SBitMap() : bmRecipient(), bmType(), bmDataTransferDirection() {}
+      inline constexpr SBitMap(const ERecipient recipient, const EType type, const EDataTransferDirection direction)
+          : bmRecipient(recipient), bmType(type), bmDataTransferDirection(direction) {}
     };
 
-    struct SRequest {
-      union UBmRequestType {
-        struct SBitMap {
-          enum class ERecipient : Type::BitMap<Type::Byte> { Device, Interface, Endpoint, Other };
-          enum class EType : Type::BitMap<Type::Byte> { Standard, Class, Vendor, Reserved };
-          enum class EDataTransferDirection : Type::BitMap<Type::Byte> { Host2Device, Device2Host };
-          const ERecipient bmRecipient : 5;
-          const EType bmType : 2;
-          const EDataTransferDirection bmDataTransferDirection : 1;
+    using BitMap = SBitMap;
 
-          constexpr SBitMap() : bmRecipient(), bmType(), bmDataTransferDirection() {}
-          constexpr SBitMap(const ERecipient recipient, const EType type, const EDataTransferDirection direction)
-              : bmRecipient(recipient), bmType(type), bmDataTransferDirection(direction) {}
-        };
-
-        using BitMap = SBitMap;
-
-        const BitMap bmCharacteristics;
-        const Type::BitMap<Type::Byte> bmBuffer;
-
-        constexpr UBmRequestType() : bmBuffer() {}
-        constexpr UBmRequestType(const Type::BitMap<Type::Byte> buffer) : bmBuffer(buffer) {}
-        constexpr UBmRequestType(const BitMap::ERecipient recipient, const BitMap::EType type, const BitMap::EDataTransferDirection direction)
-            : bmCharacteristics(recipient, type, direction) {}
-      };
-
-      using RequestType = UBmRequestType;
-
-      const RequestType bmRequestType;
-      const ERequest bRequest;
-      const Type::Word wValue;
-      const Type::Word wIndex;
-      const Type::Word wLength;
-
-      constexpr SRequest() : bmRequestType(), bRequest(), wValue(), wIndex(), wLength() {}
-      constexpr SRequest(const RequestType requestType, const ERequest request, const Type::Word value, const Type::Word index,
-                         const Type::Word length)
-          : bmRequestType(requestType), bRequest(request), wValue(value), wIndex(index), wLength(length) {}
+    union {
+      BitMap bmCharacteristics;
+      Type::Byte bmByte;
     };
 
-    using Request = SRequest;
-    const Request rRequest;
-    const Type::Byte rBuffer[sizeof(rRequest)];
-
-    constexpr UStandardRequest(const Type::Byte (&buff)[sizeof(rRequest)])
-        : rRequest(buff[0], static_cast<ERequest>(buff[1]), static_cast<Type::Word>(static_cast<Type::Word>(buff[3]) << 8 | buff[2]),
-                   static_cast<Type::Word>(static_cast<Type::Word>(buff[5]) << 8 | buff[4]),
-                   static_cast<Type::Word>(static_cast<Type::Word>(buff[7]) << 8 | buff[6])) {}
-    constexpr UStandardRequest(const Request::RequestType requestType, const ERequest request, const Type::Word value, const Type::Word index,
-                               const Type::Word length)
-        : rBuffer{requestType.bmBuffer,
-                  static_cast<Type::Byte>(request),
-                  static_cast<Type::Byte>(value),
-                  static_cast<Type::Byte>(value >> 8),
-                  static_cast<Type::Byte>(index),
-                  static_cast<Type::Byte>(index >> 8),
-                  static_cast<Type::Byte>(length),
-                  static_cast<Type::Byte>(length >> 8)} {}
+    inline constexpr SBmRequestType() : bmCharacteristics() {}
+    inline constexpr SBmRequestType(const Type::BitMap<Type::Byte> byte)
+        : bmCharacteristics(static_cast<ERecipient>(byte & 0b0001'1111), static_cast<EType>((byte & 0b0110'0000) >> 5),
+                            static_cast<EDataTransferDirection>((byte & 0b1000'0000) >> 7)) {}
   };
 
-  class CHandler final {
-  public:
-    /*!<-----Standart request functions------->!*/
-    /*static bool get_status(void);
-    static bool clear_feature(void);
-    static bool set_feature(void);
-    static bool set_address(void);*/
-    static bool get_descriptor(void);
-    /*static bool set_descriptor(void);
-    static bool get_configuration(void);
-    static bool set_configuration(void);
-    static bool get_interface(void);
-    static bool set_interface(void);
-    static bool synch_frame(void);
-    static bool set_line_coding(void);
-    static bool get_line_coding(void);
-    static bool set_control_line_state(void);
-    static bool get_max_lun(void);
-    static bool bulk_only_msd_reset(void);*/
+  using RequestType = SBmRequestType;
+  RequestType bmRequestType;
+  ERequest bRequest;
+  Type::Word wValue;
+  Type::Word wIndex;
+  Type::Word wLength;
 
-    using t_standart_usb_requests_handler = struct s_standart_usb_requests_handler {
-      UStandardRequest::ERequest request;
-      bool (&current_request_handler)(void);
-    };
+  inline constexpr SRequest() : bmRequestType(), bRequest(), wValue(), wIndex(), wLength() {}
+  inline constexpr SRequest(const RequestType requestType, const ERequest request, const Type::Word value, const Type::Word index,
+                            const Type::Word length)
+      : bmRequestType(requestType), bRequest(request), wValue(value), wIndex(index), wLength(length) {}
+};
 
-    static constexpr t_standart_usb_requests_handler standart_usb_requests_handler[] = {
-        /*{UStandardRequest::ERequest::GET_STATUS, get_status},
-        {UStandardRequest::ERequest::CLEAR_FEATURE, clear_feature},
-        {UStandardRequest::ERequest::SET_FEATURE, set_feature},
-        {UStandardRequest::ERequest::SET_ADDRESS, set_address},*/
-        {UStandardRequest::ERequest::GET_DESCRIPTOR, get_descriptor},
-        /*{UStandardRequest::ERequest::SET_DESCRIPTOR, set_descriptor},
-        {UStandardRequest::ERequest::GET_CONFIGURATION, get_configuration},
-        {UStandardRequest::ERequest::SET_CONFIGURATION, set_configuration},
-        {UStandardRequest::ERequest::GET_INTERFACE, get_interface},
-        {UStandardRequest::ERequest::SET_INTERFACE, set_interface},
-        {UStandardRequest::ERequest::SYNCH_FRAME, synch_frame},
-        {UStandardRequest::ERequest::SET_LINE_CODING, set_line_coding},
-        {UStandardRequest::ERequest::GET_LINE_CODING, get_line_coding},
-        {UStandardRequest::ERequest::SET_CONTROL_LINE_STATE, set_control_line_state},
-        {UStandardRequest::ERequest::GET_MAX_LUN, get_max_lun},
-        {UStandardRequest::ERequest::BULK_ONLY_MSD_RESET, bulk_only_msd_reset}*/};
+using Request = SRequest;
 
-    CHandler() = delete;
-
-    inline static bool Handle(const UStandardRequest::ERequest rType) {
-      for (const auto &handler : standart_usb_requests_handler)
-        if (handler.request == rType) {
-          return handler.current_request_handler();
-        }
-      return false;
-    }
-  };
+class CRequestStandard {
+  CRequestStandard() = delete;
 
 public:
-  inline CStandardRequest() = default;
+  inline static constexpr void Request(const Type::Byte (&buff)[_STANDARD_REQUEST_SIZE], SRequest &request) {
+    request.bmRequestType.bmByte = buff[0];
+    request.bRequest = static_cast<ERequest>(buff[1]);
+    request.wValue = static_cast<Type::Word>(static_cast<Type::Word>(buff[3]) << 8 | buff[2]);
+    request.wIndex = static_cast<Type::Word>(static_cast<Type::Word>(buff[5]) << 8 | buff[4]);
+    request.wLength = static_cast<Type::Word>(static_cast<Type::Word>(buff[7]) << 8 | buff[6]);
+  }
 
-  inline bool Request(volatile Type::Byte (&buf)[_STANDARD_REQUEST_SIZE]) const volatile {
-    const UStandardRequest request(const_cast<Type::Byte(&)[_STANDARD_REQUEST_SIZE]>(buf));
-
-    return true;
+  inline static constexpr void Buffer(const SRequest &request, Type::Byte (&buff)[_STANDARD_REQUEST_SIZE]) {
+    buff[0] = request.bmRequestType.bmByte;
+    buff[1] = static_cast<Type::Byte>(request.bRequest);
+    buff[2] = static_cast<Type::Byte>(request.wValue);
+    buff[4] = static_cast<Type::Byte>(request.wValue >> 8);
+    buff[5] = static_cast<Type::Byte>(request.wIndex);
+    buff[6] = static_cast<Type::Byte>(request.wIndex >> 8);
+    buff[7] = static_cast<Type::Byte>(request.wLength);
+    buff[8] = static_cast<Type::Byte>(request.wLength >> 8);
   }
 };
 
-}; // namespace iso::usb::request
+template <typename TIntegration> class CHandler final {
+
+  const TIntegration &_Integration;
+
+  /*!<-----Standart request functions------->!*/
+  bool SetAddress(const SRequest &request) {
+    _Integration._Hardware.ControlEndpoint().WriteEmpty();
+    _Integration._Timer.Delay(2);
+    _Integration._Hardware.Address(static_cast<Type::Byte>(request.wValue));
+    return true;
+  }
+  bool GetDescriptor(const SRequest &request) {
+    enum class EStringDescriptor { Language, Manufacturer, Product, SerialNumber };
+
+    switch (static_cast<EDescriptorType>(request.wValue >> 8)) {
+    case EDescriptorType::Device:
+      if (request.wLength >= sizeof(_Integration.DeviceDescriptor())) {
+        _Integration._Hardware.ControlEndpoint().Write(_Integration.DeviceDescriptor());
+      } else {
+        _Integration._Hardware.ControlEndpoint().Write(_Integration.DeviceDescriptor(), request.wLength);
+      };
+      break;
+
+    case EDescriptorType::Configuration:
+
+      if (request.wLength >= sizeof(_Integration.ConfigurationDescriptor())) {
+        _Integration._Hardware.ControlEndpoint().Write(_Integration.ConfigurationDescriptor());
+      } else {
+        _Integration._Hardware.ControlEndpoint().Write(_Integration.ConfigurationDescriptor(), request.wLength);
+      }
+      break;
+
+    case EDescriptorType::String:
+      switch (static_cast<EStringDescriptor>((request.wValue) & 0xFF)) {
+      case EStringDescriptor::Language:
+        _Integration._Hardware.ControlEndpoint().Write(_Integration.StringLanguageDescriptor());
+        break;
+
+      case EStringDescriptor::Manufacturer:
+        _Integration._Hardware.ControlEndpoint().Write(_Integration.StringManufacturerDescriptor());
+        break;
+
+      case EStringDescriptor::Product:
+        //_Integration._Hardware.ControlEndpoint().WriteEmpty();
+        _Integration._Hardware.ControlEndpoint().Write(_Integration.StringProductDescriptor());
+        break;
+
+      case EStringDescriptor::SerialNumber:
+        _Integration._Hardware.ControlEndpoint().Write(_Integration.StringSerialNumberDescriptor());
+        break;
+
+      default:
+        _Integration._Hardware.ControlEndpoint().WriteEmpty();
+        noHandler++;
+        break;
+      }
+      break;
+
+    case EDescriptorType::Qualifier:
+      _Integration._Hardware.ControlEndpoint().Write(_Integration.QualifierDescriptor());
+      break;
+
+    case EDescriptorType::ReportDescriptor:
+      _Integration._Hardware.ControlEndpoint().Write(_Integration.CustomHid());
+      break;
+
+    default:
+      noHandler++;
+      break;
+    }
+    return true;
+  }
+
+  bool SetConfiguration(const SRequest &) {
+    _Integration.SetConfiguration();
+    _Integration._Hardware.ControlEndpoint().WriteEmpty();
+    return true;
+  }
+
+  bool GetInterface(const SRequest &) { return _Integration._Hardware.ControlEndpoint().WriteEmpty(); }
+
+  struct SStandardRequestTable {
+    ERequest request;
+    bool (CHandler::*Handler)(const SRequest &request);
+  };
+
+  static constexpr SStandardRequestTable _TableStandardRequests[] = {{ERequest::SetAddress, &CHandler::SetAddress},
+                                                                     {ERequest::GetDescriptor, &CHandler::GetDescriptor},
+                                                                     {ERequest::SetConfiguration, &CHandler::SetConfiguration},
+                                                                     {ERequest::GetInterface, &CHandler::GetInterface}};
+
+public:
+  inline constexpr CHandler(const TIntegration &integ) : _Integration(integ) {}
+
+  inline bool Handle(const SRequest &request) {
+    for (const auto &handler : _TableStandardRequests) {
+      if (handler.request == request.bRequest) {
+        return (this->*handler.Handler)(request);
+      }
+    }
+    noHandler++;
+    return true;
+  }
+};
+} // namespace iso::usb::request

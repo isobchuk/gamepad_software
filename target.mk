@@ -29,7 +29,7 @@ OPTIMIZE		=-Os
 else
 CONFIGURATION 	= debug
 DEFINES 		+= $(DEFINES_DEBUG)
-OPTIMIZE		=-Os
+OPTIMIZE		=-O3
 endif
 
 # Paths for build result folder
@@ -50,20 +50,20 @@ APP_SOURCES_FOLDER	= sources
 APP_SUB_FOLDERS		=
 
 # Add your components folders here
-COMPONENTS 	:= cpp_register hal hal\stm32f070f6\registers hal\stm32f070f6\hal meta_types led usb fifo
+COMPONENTS 	:= cpp_register hal hal\stm32f070f6\registers hal\stm32f070f6\hal meta_types led usb fifo button
 # Add third party folders here
 THIRD_PARTY :=
 # Add additional includes folder here
 INCLUDES 	:= 
 
 # Flag to use std library
-STD_LIB 	:= 0
+STD_LIB 	:= 1
 # Flag to add git commit and branch to the sources
 GIT_DATA 	:= 1
 
 # Compilation flags and linker script
 COMMONFLAGS	= -ggdb -mcpu=cortex-m0 -mthumb -fmax-errors=5 $(OPTIMIZE) $(DEFINES) $(INCLUDES)
 CFLAGS		=
-CXXFLAGS 	= -std=c++20 -fdata-sections -ffunction-sections -fno-rtti -fno-exceptions -fno-threadsafe-statics -fconcepts-diagnostics-depth=5 -fno-builtin
+CXXFLAGS 	= -std=c++20 -fdata-sections -ffunction-sections -fno-rtti -fno-exceptions -fno-threadsafe-statics -fconcepts-diagnostics-depth=5 #-fno-builtin -fno-builtin-function -ffreestanding -fno-tree-loop-distribute-patterns
 LDFLAGS		= --specs=nano.specs --specs=nosys.specs
 LDSCRIPT	= linker.ld

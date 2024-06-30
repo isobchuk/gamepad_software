@@ -1,11 +1,13 @@
 #pragma once
 
+#include "mcu_adc.hpp"
 #include "mcu_clock.hpp"
 #include "mcu_gpio.hpp"
 #include "mcu_interrupts.hpp"
 #include "mcu_systick.hpp"
 #include "mcu_usb.hpp"
 
+#include "integration_usb.hpp"
 #include "led.hpp"
 #include "meta_types.hpp"
 #include "system_time.hpp"
@@ -20,10 +22,10 @@ enum class PinFunction : unsigned {
   JoystickAxisY,
   JoystickButton,
   ButtonLed,
-  ButtonX,
-  ButtonY,
-  ButtonA,
-  ButtonB,
+  Button3, // X
+  Button0, // Y
+  Button2, // A
+  Button1, // B
   UsbDn,
   UsbDp,
   Led,
@@ -39,10 +41,10 @@ inline constexpr gpio::PinOut<PinFunction> sc_Pin[] = {
 
     // Buttons
     {PinFunction::ButtonLed,      gpio::Port::PA,   gpio::Pin::Pin_3,   gpio::Mode::Input,      {}},
-    {PinFunction::ButtonX,        gpio::Port::PA,   gpio::Pin::Pin_4,   gpio::Mode::Input,      {}},
-    {PinFunction::ButtonY,        gpio::Port::PA,   gpio::Pin::Pin_5,   gpio::Mode::Input,      {}},
-    {PinFunction::ButtonA,        gpio::Port::PA,   gpio::Pin::Pin_6,   gpio::Mode::Input,      {}},
-    {PinFunction::ButtonB,        gpio::Port::PA,   gpio::Pin::Pin_7,   gpio::Mode::Input,      {}},
+    {PinFunction::Button3,        gpio::Port::PA,   gpio::Pin::Pin_4,   gpio::Mode::Input,      {}},
+    {PinFunction::Button0,        gpio::Port::PA,   gpio::Pin::Pin_5,   gpio::Mode::Input,      {}},
+    {PinFunction::Button2,        gpio::Port::PA,   gpio::Pin::Pin_6,   gpio::Mode::Input,      {}},
+    {PinFunction::Button1,        gpio::Port::PA,   gpio::Pin::Pin_7,   gpio::Mode::Input,      {}},
 
     // USB
     {PinFunction::UsbDn,          gpio::Port::PA,   gpio::Pin::Pin_11,  gpio::Mode::Alternate,  {gpio::Speed::High, gpio::Alternative::AF7}},
@@ -64,12 +66,13 @@ struct processor {
   static constexpr gpio::GpioController<gamepad::sc_Pin> gpio{};
   static constexpr mcu::interrupt::InterruptController interrupt{};
   static constexpr mcu::system_timer::SystemTimer<gamepad::sc_SystemClock, mcu::system_timer::Unit::mS, SystemTick> systemTimer{};
-  static constexpr mcu::usb::Usb usb{};
 };
 
 static constexpr hardware::led::Led led(processor::gpio[iso::meta_type::const_v<gamepad::PinFunction::Led>]);
 
 static constexpr system_time::SystemTime time(processor::systemTimer);
 using Timeout = decltype(time)::TimeoutTimer;
+
+static constexpr auto integrationUsb = integration::usb::device::CUsbIntegration(time);
 
 } // namespace gamepad

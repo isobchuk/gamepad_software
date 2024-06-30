@@ -1,22 +1,47 @@
 #pragma once
 
-#include <usb.hpp>
+#include "request.hpp"
+#include "usb.hpp"
+static unsigned ctr;
+
+static uint16_t last;
 
 namespace iso::usb {
-template <> class CUsb<EConnection::Device> {
-  static constexpr auto _Connection = EConnection::Device;
-  const descriptor::EDeviceClass _DeviceClass;
-  const descriptor::EBcdUsb _ProtocolVersion;
-  const Type::Word _Vid;
-  const Type::Word _Pid;
+template <typename TIntegration> class CUsb<EConnection::Device, TIntegration> {
 
-  const descriptor::UDeviceDescriptor _DeviceDescriptor;
+  const TIntegration &_Integration;
 
 public:
-  consteval CUsb(const descriptor::EDeviceClass device, const descriptor::EBcdUsb version, const Type::Word vid, const Type::Word pid)
-      : _DeviceClass(device), _ProtocolVersion(version), _Vid(vid), _Pid(pid), _DeviceDescriptor(version, device, vid, pid) {}
+  consteval CUsb(const TIntegration &integ) : _Integration(integ) {}
+  void Init() const { _Integration.Init(); }
+  void operator()() const {
+    using namespace iso::usb;
+
+    volatile auto &epBuffer = _Integration._Hardware.ControlEndpoint().Read();
+
+    if (epBuffer) {
+      // Away from volatile
+      Type::Byte buffer[request::_STANDARD_REQUEST_SIZE];
+      for (unsigned i = 0; i < sizeof(buffer); i++) {
+        buffer[i] = epBuffer.aBuffer[i];
+      }
+
+      ctr++;
+
+      request::SRequest request;
+      request::CRequestStandard::Request(buffer, request);
+      last = request.wLength;
+      _Integration._Hardware.ControlEndpoint().Ack();
+      epBuffer();
+
+      auto requestHandler = request::CHandler(_Integration);
+      requestHandler.Handle(request);
+    }
+
+    _Integration();
+  }
 };
 
-using UsbDevice = Usb<EConnection::Device>;
+template <typename TIntegration> using UsbDevice = Usb<EConnection::Device, TIntegration>;
 
 } // namespace iso::usb
